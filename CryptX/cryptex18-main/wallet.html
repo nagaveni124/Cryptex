@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trading Wallet</title>
+  <style>
+
+    body {
+      background: linear-gradient(to bottom, #000000, #808080);
+      font-family: Arial, sans-serif;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    .balance {
+      text-align: center;
+      font-size: 48px;
+      margin-bottom: 40px;
+    }
+
+    .button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #000000;
+      color: #ffffff;
+      border: none;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #333333;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    .transaction-history {
+      margin-top: 40px;
+    }
+
+    .transaction-history h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .transaction-item {
+      border-bottom: 1px solid #ffffff;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+
+    .transaction-item p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Trading Wallet</h1>
+
+    <div class="balance">
+      Wallet Balance: <span id="walletBalance">0</span>
+    </div>
+
+    <button class="button" onclick="addMoney()">Add Money</button>
+    <button class="button" onclick="withdrawMoney()">Withdraw Money</button>
+
+    <div id="addMoneyModal" style="display: none;">
+      <h2>Add Money</h2>
+      <input type="number" class="input-field" id="addMoneyAmount" placeholder="Enter amount">
+      <input type="text" class="input-field" id="addMoneyUPI" placeholder="Enter UPI">
+      <button class="button" onclick="confirmAddMoney()">Confirm</button>
+    </div>
+
+    <div id="withdrawMoneyModal" style="display: none;">
+      <h2>Withdraw Money</h2>
+      <input type="number" class="input-field" id="withdrawMoneyAmount" placeholder="Enter amount">
+      <input type="text" class="input-field" id="withdrawMoneyUPI" placeholder="Enter UPI">
+      <button class="button" onclick="confirmWithdrawMoney()">Confirm</button>
+    </div>
+
+    <div class="transaction-history">
+      <h3>Transaction History</h3>
+      <div id="transactionList"></div>
+    </div>
+  </div>
+
+  <script>
+    var walletBalance = 0;
+    var transactionHistory = [];
+
+        // Retrieve the wallet balance from localStorage if it exists
+var walletBalance = localStorage.getItem("walletBalance");
+walletBalance = walletBalance ? parseFloat(walletBalance) : 0;
+
+    function addMoney() {
+      var addMoneyModal = document.getElementById("addMoneyModal");
+      addMoneyModal.style.display = "block";
+    }
+
+    function confirmAddMoney() {
+  var amount = parseFloat(document.getElementById("addMoneyAmount").value);
+  var upi = document.getElementById("addMoneyUPI").value;
+
+  if (upi.endsWith("@ybl") || upi.endsWith("@ibl") || upi.endsWith("@icici")) {
+    walletBalance += amount;
+
+    var transaction = {
+      type: "Credit",
+      amount: amount,
+      upi: upi,
+      timestamp: new Date().toLocaleString()
+    };
+    transactionHistory.push(transaction);
+    updateTransactionHistory();
+
+    alert("Money added successfully");
+    closeModal("addMoneyModal");
+
+    updateWalletBalance(); // Update the wallet balance display
+  } else {
+    alert("Invalid UPI");
+  }
+
+
+  walletBalance += amount;
+
+// Store the updated wallet balance in localStorage
+localStorage.setItem("walletBalance", walletBalance.toString());
+}
+
+    function withdrawMoney() {
+      var withdrawMoneyModal = document.getElementById("withdrawMoneyModal");
+      withdrawMoneyModal.style.display = "block";
+    }
+
+    function confirmWithdrawMoney() {
+      var amount = parseFloat(document.getElementById("withdrawMoneyAmount").value);
+      var upi = document.getElementById("withdrawMoneyUPI").value;
+
+      if (upi.endsWith("@ybl") || upi.endsWith("@ibl") || upi.endsWith("@icici")) {
+        if (amount > walletBalance) {
+          alert("Insufficient funds");
+        } else {
+          walletBalance -= amount;
+          updateWalletBalance();
+
+          var transaction = {
+            type: "Debit",
+            amount: amount,
+            upi: upi,
+            timestamp: new Date().toLocaleString()
+          };
+          transactionHistory.push(transaction);
+          updateTransactionHistory();
+
+          alert("Money withdrawn successfully");
+          closeModal("withdrawMoneyModal");
+        }
+      } else {
+        alert("Invalid UPI");
+      }
+
+    }
+
+    if (localStorage.getItem('walletBalance')) {
+  walletBalance = parseFloat(localStorage.getItem('walletBalance'));
+}
+
+    function updateWalletBalance() {
+      var walletBalanceElement = document.getElementById("walletBalance");
+      walletBalanceElement.textContent = walletBalance.toFixed(2);
+
+      var walletBalanceElement = document.getElementById("walletBalance");
+  walletBalanceElement.textContent = walletBalance.toFixed(2);
+
+  // Save wallet balance to local storage
+  localStorage.setItem('walletBalance', walletBalance.toFixed(2));
+  var walletBalanceElement = document.getElementById("walletBalance");
+  walletBalanceElement.textContent = walletBalance.toFixed(2);
+}
+
+// Initialize the wallet balance display
+updateWalletBalance();
+
+    
+
+    function updateTransactionHistory() {
+      var transactionList = document.getElementById("transactionList");
+      transactionList.innerHTML = "";
+
+      for (var i = 0; i < transactionHistory.length; i++) {
+        var transaction = transactionHistory[i];
+
+        var transactionItem = document.createElement("div");
+        transactionItem.className = "transaction-item";
+
+        var transactionType = document.createElement("p");
+        transactionType.textContent = transaction.type;
+        transactionItem.appendChild(transactionType);
+
+        var transactionAmount = document.createElement("p");
+        transactionAmount.textContent = "Amount: $" + transaction.amount.toFixed(2);
+        transactionItem.appendChild(transactionAmount);
+
+        var transactionUPI = document.createElement("p");
+        transactionUPI.textContent = "UPI: " + transaction.upi;
+        transactionItem.appendChild(transactionUPI);
+
+        var transactionTimestamp = document.createElement("p");
+        transactionTimestamp.textContent = "Timestamp: " + transaction.timestamp;
+        transactionItem.appendChild(transactionTimestamp);
+
+        transactionList.appendChild(transactionItem);
+      }
+    }
+
+    function closeModal(modalId) {
+      var modal = document.getElementById(modalId);
+      modal.style.display = "none";
+    }
+
+
+
+
+
+// Store the updated wallet balance in localStorage
+localStorage.setItem("walletBalance", walletBalance.toString());
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ...
+
+
+// ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
+</body>
+</html>
